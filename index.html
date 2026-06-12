@@ -164,9 +164,11 @@
     });
 
     // Botones genéticos (placeholder)
+    let poblacion = [];
     document
       .getElementById("generarPoblacionBtn")
       .addEventListener("click", function () {
+        poblacion = generarPoblacion(30);
         console.log("Generar Población");
       });
 
