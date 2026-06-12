@@ -1,3 +1,12 @@
+let figura = {
+  tipo: "circle",
+  x: 0,
+  y: 0,
+  r: 0,
+  color: { r: 0, g: 0, b: 0, a: 0 },
+  aptitud: 0
+};
+
 function loadImageBitmap(imageElement) {
   // Canvas oculto — solo para leer píxeles, el usuario no lo ve
   const canvas = document.createElement("canvas");
@@ -15,6 +24,39 @@ function loadImageBitmap(imageElement) {
   console.log("Total valores:", pixels.length);
   console.log("Píxel (0,0) → R:", pixels[0], "G:", pixels[1], "B:", pixels[2], "A:", pixels[3]);
 };
+
+function crearFiguraAleatoria() {
+  x = Math.floor(Math.random() * 400);
+  y = Math.floor(Math.random() * 300);
+  r = Math.floor(Math.random() * 256);
+  g = Math.floor(Math.random() * 256);
+  b = Math.floor(Math.random() * 256);
+  alpha = Math.floor(Math.random() * 256);
+
+    return {
+        tipo: "circle",
+        x: Math.floor(Math.random() * 400),
+        y: Math.floor(Math.random() * 300),
+        r: Math.floor(Math.random() * 50) + 10, // radio entre 10 y 60
+        color: {
+        r: Math.floor(Math.random() * 256),
+        g: Math.floor(Math.random() * 256),
+        b: Math.floor(Math.random() * 256),
+        a: Math.floor(Math.random() * 156) + 50 // alpha entre 50 y 205
+        },
+        aptitud: 0
+    };
+
+
+};
+
+function generarPoblacion(n) {
+  let poblacion = [];
+  for (let i = 0; i < n; i++) {
+    poblacion.push(crearFiguraAleatoria());
+  }
+  return poblacion;
+}
 
 
 
