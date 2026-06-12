@@ -148,6 +148,7 @@
     </div>
   </div>
 
+  <script src="functions.js"></script>
   <script>
     let currentColor = "#00796b";
     // 10000
@@ -156,6 +157,9 @@
     // Random image
     document.getElementById("imageBtn").addEventListener("click", function () {
       const img = document.getElementById("stockImage");
+    img.onload = function() {
+      loadImageBitmap(img);
+    };
       img.src = "https://picsum.photos/400/300?random=" + Date.now();
     });
 
