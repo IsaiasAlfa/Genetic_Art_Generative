@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>p5 Shapes Drawer</title>
+
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+
+  <style>
+    body {
+      background: #f5f7fa;
+    }
+    .app-wrap {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .toolbar label {
+      font-weight: 600;
+    }
+    .canvas-shell,
+    .image-shell {
+      background: white;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .status {
+      color: #555;
+      font-size: 14px;
+    }
+    .random-image {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #eee;
+      margin-top: 8px;
+    }
+    .image-shell {
+      max-width: 444px;
+      margin-bottom: 8px;
+    }
+    #sketch-holder-2 canvas {
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #ccc;
+      width: 400;
+      height: 300;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    
+    <!-- CARD 1: imagen + botones genéticos (sin canvas) -->
+    <div class="w3-card w3-white w3-padding-large w3-round-large w3-margin-bottom">
+      <h1 class="w3-xlarge">Basic p5.js Shape Drawer</h1>
+      <p class="status">
+        Choose a color, draw a shape, or load a random free stock image.
+      </p>
+
+      <div class="image-shell w3-margin-top">
+        <p class="status">Random photo</p>
+        <img
+          id="stockImage"
+          class="random-image"
+          src="https://picsum.photos/400/300?random=1"
+          alt="Random free stock style image"
+          width="400"
+          height="300"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="toolbar w3-margin-bottom">
+        <button id="imageBtn" class="w3-button w3-purple w3-round">
+          Random Image
+        </button>
+
+        <!-- Botones genéticos -->
+        <button id="generarPoblacionBtn" class="w3-button w3-teal w3-round">
+          Generar Población
+        </button>
+        <button id="cruzarBtn" class="w3-button w3-blue w3-round">
+          Cruzar
+        </button>
+        <button id="mutarBtn" class="w3-button w3-orange w3-round">
+          Mutar
+        </button>
+        <button id="calcularAptitudBtn" class="w3-button w3-red w3-round">
+          Calcular aptitud
+        </button>
+        <button id="seleccionarBtn" class="w3-button w3-green w3-round">
+          Seleccionar
+        </button>
+      </div>
+
+      <!-- Canvas anterior eliminado -->
+    </div>
+
+    <!-- CARD 2: color picker + random shapes canvas -->
+    <div class="w3-card w3-white w3-padding-large w3-round-large">
+      <h2 class="w3-large">Random Shapes Canvas</h2>
+      <p class="status">
+        Pick a color and use the buttons below to draw random circles, triangles and lines on this canvas.
+      </p>
+
+      <div class="toolbar w3-margin-bottom">
+        <label for="shapeColor">Color:</label>
+        <input
+          class="w3-input w3-border"
+          type="color"
+          id="shapeColor"
+          value="#00796b"
+          style="width: 72px; padding: 0; height: 40px;"
+        />
+
+        <button id="circleBtn" class="w3-button w3-blue w3-round">
+          Draw Circle
+        </button>
+        <button id="triangleBtn" class="w3-button w3-green w3-round">
+          Draw Triangle
+        </button>
+        <button id="lineBtn" class="w3-button w3-red w3-round">
+          Draw Line
+        </button>
+        <button id="clearBtn" class="w3-button w3-light-grey w3-round">
+          Clear
+        </button>
+      </div>
+
+      <div class="canvas-shell">
+        <div id="sketch-holder-2" width="400" height="300"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentColor = "#00796b";
+    // 10000
+    // 30
+    // Cargar imagen a bitmap
+    // Random image
+    document.getElementById("imageBtn").addEventListener("click", function () {
+      const img = document.getElementById("stockImage");
+      img.src = "https://picsum.photos/400/300?random=" + Date.now();
+    });
+
+    // Botones genéticos (placeholder)
+    document
+      .getElementById("generarPoblacionBtn")
+      .addEventListener("click", function () {
+        console.log("Generar Población");
+      });
+
+    document
+      .getElementById("cruzarBtn")
+      .addEventListener("click", function () {
+        console.log("Cruzar");
+      });
+
+    document.getElementById("mutarBtn").addEventListener("click", function () {
+      console.log("Mutar");
+    });
+
+    document
+      .getElementById("calcularAptitudBtn")
+      .addEventListener("click", function () {
+        console.log("Calcular aptitud");
+      });
+
+    document
+      .getElementById("seleccionarBtn")
+      .addEventListener("click", function () {
+        console.log("Seleccionar");
+      });
+
+    // Color picker en la segunda card
+    document.getElementById("shapeColor").addEventListener("input", function (e) {
+      currentColor = e.target.value;
+    });
+
+    // Sketch 2: random shapes
+    const sketch2 = function (p) {
+      let action = null;
+
+      p.setup = function () {
+        const canvas = p.createCanvas(700, 220);
+        canvas.parent("sketch-holder-2");
+        p.background(255);
+      };
+
+      p.draw = function () {
+        if (!action) return;
+
+        p.stroke(currentColor);
+        p.fill(currentColor);
+        p.strokeWeight(3);
+
+        if (action === "circle") {
+          p.circle(
+            p.random(80, p.width - 80),
+            p.random(80, p.height - 80),
+            80
+          );
+        } else if (action === "triangle") {
+          const x = p.random(80, p.width - 80);
+          const y = p.random(100, p.height - 40);
+          p.triangle(x, y - 50, x - 45, y + 30, x + 45, y + 30);
+        } else if (action === "line") {
+          p.noFill();
+          p.line(
+            p.random(20, p.width - 20),
+            p.random(20, p.height - 20),
+            p.random(20, p.width - 20),
+            p.random(20, p.height - 20)
+          );
+        }
+
+        action = null;
+      };
+
+      p.clearCanvas = function () {
+        p.background(255);
+      };
+
+      // Hooks con los botones de la segunda card
+      document.getElementById("circleBtn").addEventListener("click", function () {
+        action = "circle";
+      });
+
+      document
+        .getElementById("triangleBtn")
+        .addEventListener("click", function () {
+          action = "triangle";
+        });
+
+      document.getElementById("lineBtn").addEventListener("click", function () {
+        action = "line";
+      });
+
+      document.getElementById("clearBtn").addEventListener("click", function () {
+        p.clearCanvas();
+      });
+    };
+
+
+    // Crear solo la instancia del segundo sketch
+    const p5instance2 = new p5(sketch2);
+  </script>
+</body>
+</html>
+
+
+
