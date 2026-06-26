@@ -1,3 +1,5 @@
+let bitmapObjetivo = null;
+
 let figura = {
   tipo: "circle",
   x: 0,
@@ -26,22 +28,17 @@ let figura3 = {
 };
 
 function loadImageBitmap(imageElement) {
-  // Canvas oculto — solo para leer píxeles, el usuario no lo ve
   const canvas = document.createElement("canvas");
   canvas.width = 400;
   canvas.height = 300;
   const ctx = canvas.getContext("2d");
-
-  // Cargar la imagen
   ctx.drawImage(imageElement, 0, 0, 400, 300);
 
-  // Extrae todos los píxeles: array plano [R,G,B,A, R,G,B,A, ...]
   const imageData = ctx.getImageData(0, 0, 400, 300);
-  const pixels = imageData.data; // Uint8ClampedArray con 400*300*4 = 480,000 valores
+  bitmapObjetivo = imageData.data;
 
-  console.log("Total valores:", pixels.length);
-  console.log("Píxel (0,0) → R:", pixels[0], "G:", pixels[1], "B:", pixels[2], "A:", pixels[3]);
-};
+  console.log("Bitmap objetivo cargado:", bitmapObjetivo.length, "valores");
+}
 
 function crearFiguraAleatoria() {
   const tipos = ["circle", "triangle", "line"];
@@ -89,6 +86,7 @@ function generarPoblacion(n) {
 }
 
 function dibujarPoblacion(p, poblacion) {
+  p.background(255);
   for (let figura of poblacion) {
     const c = figura.color;
     p.fill(c.r, c.g, c.b, c.a);
