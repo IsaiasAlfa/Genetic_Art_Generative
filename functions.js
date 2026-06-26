@@ -1,5 +1,7 @@
+// Variable para almacenar el bitmap de la imagen objetivo
 let bitmapObjetivo = null;
 
+// Circulos, Triángulos y Líneas
 let figura = {
   tipo: "circle",
   x: 0,
@@ -27,6 +29,16 @@ let figura3 = {
   aptitud: 0
 };
 
+
+// Variable para el canvas auxiliar
+let pAux = null;
+
+function inicializarCanvasAux(p) {
+  pAux = p.createGraphics(400, 300);
+  pAux.pixelDensity(1);
+}
+
+// Función para cargar la imagen objetivo y obtener su bitmap
 function loadImageBitmap(imageElement) {
   const canvas = document.createElement("canvas");
   canvas.width = 400;
@@ -40,6 +52,7 @@ function loadImageBitmap(imageElement) {
   console.log("Bitmap objetivo cargado:", bitmapObjetivo.length, "valores");
 }
 
+// Función para crear una figura aleatoria
 function crearFiguraAleatoria() {
   const tipos = ["circle", "triangle", "line"];
   const tipo = tipos[Math.floor(Math.random() * tipos.length)];
@@ -77,6 +90,7 @@ function crearFiguraAleatoria() {
   }
 }
 
+// Función para generar una población de figuras aleatorias
 function generarPoblacion(n) {
   let poblacion = [];
   for (let i = 0; i < n; i++) {
@@ -85,6 +99,7 @@ function generarPoblacion(n) {
   return poblacion;
 }
 
+// Función para dibujar la población en el canvas
 function dibujarPoblacion(p, poblacion) {
   p.background(255);
   for (let figura of poblacion) {
