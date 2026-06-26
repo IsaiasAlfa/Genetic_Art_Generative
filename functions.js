@@ -66,7 +66,7 @@ function crearFiguraAleatoria() {
 
   if (tipo === "circle") {
     return {
-      tipo,
+      tipo, fija: false,
       x: Math.floor(Math.random() * 400),
       y: Math.floor(Math.random() * 300),
       radio: Math.floor(Math.random() * 50) + 10,
@@ -74,7 +74,7 @@ function crearFiguraAleatoria() {
     };
   } else if (tipo === "triangle") {
     return {
-      tipo,
+      tipo, fija: false,
       x1: Math.floor(Math.random() * 400), y1: Math.floor(Math.random() * 300),
       x2: Math.floor(Math.random() * 400), y2: Math.floor(Math.random() * 300),
       x3: Math.floor(Math.random() * 400), y3: Math.floor(Math.random() * 300),
@@ -82,7 +82,7 @@ function crearFiguraAleatoria() {
     };
   } else {
     return {
-      tipo,
+      tipo, fija: false,
       x1: Math.floor(Math.random() * 400), y1: Math.floor(Math.random() * 300),
       x2: Math.floor(Math.random() * 400), y2: Math.floor(Math.random() * 300),
       grosor: Math.floor(Math.random() * 4) + 1,
@@ -169,30 +169,25 @@ function calcularAptitud(figura) {
 
 function seleccionar(poblacion) {
   poblacion.sort((a, b) => a.aptitud - b.aptitud);
-  return poblacion.slice(0, 15);
+  return poblacion.slice(0, 30);
 }
 
 function cruzar(poblacion) {
   const hijos = [];
-  while (hijos.length < 30 - poblacion.length) {
+  while (hijos.length < 60 - poblacion.length) {
     const padre1 = poblacion[Math.floor(Math.random() * poblacion.length)];
     const padre2 = poblacion[Math.floor(Math.random() * poblacion.length)];
 
     const hijo = crearFiguraAleatoria();
-    hijo.color = {
-      r: Math.floor((padre1.color.r + padre2.color.r) / 2),
-      g: Math.floor((padre1.color.g + padre2.color.g) / 2),
-      b: Math.floor((padre1.color.b + padre2.color.b) / 2),
-      a: Math.floor((padre1.color.a + padre2.color.a) / 2)
-    };
+    hijo.color = Math.random() < 0.5 ? {...padre1.color} : {...padre2.color};
     hijos.push(hijo);
   }
   return [...poblacion, ...hijos];
 }
 
-function mutar(poblacion) {
+function mutar(poblacion, tasa) {
   for (let figura of poblacion) {
-    if (Math.random() < 0.13) {
+    if (Math.random() < tasa) {
       // Mutar color
       figura.color.r = Math.min(255, Math.max(0, figura.color.r + Math.floor(Math.random() * 50) - 25));
       figura.color.g = Math.min(255, Math.max(0, figura.color.g + Math.floor(Math.random() * 50) - 25));
@@ -200,7 +195,7 @@ function mutar(poblacion) {
       figura.color.a = Math.min(255, Math.max(0, figura.color.a + Math.floor(Math.random() * 50) - 25));
     }
 
-    if (Math.random() < 0.13) {
+    if (Math.random() < tasa) {
       // Mutar geometría según tipo
       if (figura.tipo === "circle") {
         figura.x = Math.min(400, Math.max(0, figura.x + Math.floor(Math.random() * 40) - 20));
@@ -225,4 +220,67 @@ function mutar(poblacion) {
     }
   }
   return poblacion;
+}
+
+function calcularAptitudGlobal(p) {
+  p.loadPixels();
+  const pixeles = p.pixels;
+  let mse = 0;
+
+  for (let i = 0; i < pixeles.length; i += 4) {
+    const dr = pixeles[i]     - bitmapObjetivo[i];
+    const dg = pixeles[i + 1] - bitmapObjetivo[i + 1];
+    const db = pixeles[i + 2] - bitmapObjetivo[i + 2];
+    mse += dr * dr + dg * dg + db * db;
+  }
+
+  return mse / (pixeles.length / 4);
+}
+
+let figurasFijas = [];
+
+function fijarMejores(poblacion, aptitudGlobal) {
+  const LIMITE_FIJAS = 300;
+
+  for (let i = poblacion.length - 1; i >= 0; i--) {
+    let figuraActual = poblacion[i];
+
+    // Verificamos si la figura de la población es buena comparada con la aptitud global
+    if (!figuraActual.fija && figuraActual.aptitud < aptitudGlobal * 0.5) {
+      
+      if (figurasFijas.length < LIMITE_FIJAS) {
+        // 1. Si aún hay espacio, simplemente la agregamos
+        figuraActual.fija = true;
+        figurasFijas.push(figuraActual);
+        
+        // La sacamos de la población y creamos una nueva
+        poblacion.splice(i, 1);
+        poblacion.push(crearFiguraAleatoria());
+        
+      } else {
+        // 2. Si ya está lleno, buscamos la peor figura (la del MSE / aptitud más alto)
+        let indicePeor = 0;
+        let peorAptitud = figurasFijas[0].aptitud;
+
+        for (let j = 1; j < figurasFijas.length; j++) {
+          if (figurasFijas[j].aptitud > peorAptitud) {
+            peorAptitud = figurasFijas[j].aptitud;
+            indicePeor = j;
+          }
+        }
+
+        // 3. Comparamos si la figura actual es MEJOR (menor aptitud) que la peor guardada
+        if (figuraActual.aptitud < peorAptitud) {
+          figuraActual.fija = true;
+          
+          // Reemplazamos la peor figura por la nueva
+          figurasFijas[indicePeor] = figuraActual;
+          
+          // La sacamos de la población y creamos una nueva para mantener el tamaño
+          poblacion.splice(i, 1);
+          poblacion.push(crearFiguraAleatoria());
+        }
+      }
+    }
+  }
 }

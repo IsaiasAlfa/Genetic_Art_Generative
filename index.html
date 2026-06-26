@@ -147,6 +147,7 @@
         <button id="clearBtn" class="w3-button w3-light-grey w3-round">
           Clear
         </button>
+        <p class="status">Generación: <span id="generacionLabel">0</span> | Aptitud global: <span id="aptitudLabel">-</span></p>
       </div>
 
       <div class="canvas-shell">
@@ -176,7 +177,7 @@
     document
       .getElementById("generarPoblacionBtn")
       .addEventListener("click", function () {
-        poblacion = generarPoblacion(30);
+        poblacion = generarPoblacion(60);
         dibujarPoblacion(p5instance2, poblacion);
         console.log("Generar Población", poblacion);
       });
@@ -190,7 +191,7 @@
       });
 
     document.getElementById("mutarBtn").addEventListener("click", function () {
-      poblacion = mutar(poblacion);
+      poblacion = mutar(poblacion, tasaMutacion);
       console.log("Mutar", poblacion);
       dibujarPoblacion(p5instance2, poblacion);
     });
@@ -214,19 +215,39 @@
 
     let intervalo = null;
     let generacion = 0;
+    let mejorAptitudGlobal = Infinity;
+    let generacionesSinMejora = 0;
+    let tasaMutacion = 0.13;
 
     document.getElementById("evolucionarBtn").addEventListener("click", function () {
       if (intervalo) return;
       poblacion = generarPoblacion(60);
       generacion = 0;
-
       intervalo = setInterval(function () {
         for (let figura of poblacion) calcularAptitud(figura);
+
+        const aptitudGlobal = calcularAptitudGlobal(p5instance2);
+        fijarMejores(poblacion, aptitudGlobal);
+
+        if (aptitudGlobal < mejorAptitudGlobal) {
+          mejorAptitudGlobal = aptitudGlobal;
+          generacionesSinMejora = 0;
+          tasaMutacion = 0.13;
+        } else {
+          generacionesSinMejora++;
+          if (generacionesSinMejora >= 50) {
+            tasaMutacion = 0.18;
+          }
+        }
+
         poblacion = seleccionar(poblacion);
         poblacion = cruzar(poblacion);
-        poblacion = mutar(poblacion);
+        poblacion = mutar(poblacion, tasaMutacion);
         dibujarPoblacion(p5instance2, poblacion);
 
+        dibujarPoblacion(p5instance2, [...poblacion, ...figurasFijas]);
+        document.getElementById("generacionLabel").innerText = generacion;
+        document.getElementById("aptitudLabel").innerText = aptitudGlobal.toFixed(2);
         generacion++;
         if (generacion >= 10000) {
           clearInterval(intervalo);
