@@ -81,6 +81,7 @@
           alt="Random free stock style image"
           width="400"
           height="300"
+          crossorigin="anonymous"
           loading="lazy"
         />
       </div>
@@ -105,6 +106,12 @@
         </button>
         <button id="seleccionarBtn" class="w3-button w3-green w3-round">
           Seleccionar
+        </button>
+        <button id="evolucionarBtn" class="w3-button w3-indigo w3-round">
+          Evolucionar
+        </button>
+        <button id="detenerBtn" class="w3-button w3-grey w3-round">
+          Detener
         </button>
       </div>
 
@@ -157,9 +164,10 @@
     // Random image
     document.getElementById("imageBtn").addEventListener("click", function () {
       const img = document.getElementById("stockImage");
-    img.onload = function() {
-      loadImageBitmap(img);
-    };
+      img.crossOrigin = "anonymous";
+      img.onload = function() {
+        loadImageBitmap(img);
+      };
       img.src = "https://picsum.photos/400/300?random=" + Date.now();
     });
 
@@ -176,24 +184,63 @@
     document
       .getElementById("cruzarBtn")
       .addEventListener("click", function () {
-        console.log("Cruzar");
+        poblacion = cruzar(poblacion);
+        console.log("Cruzar", poblacion);
+        dibujarPoblacion(p5instance2, poblacion);
       });
 
     document.getElementById("mutarBtn").addEventListener("click", function () {
-      console.log("Mutar");
+      poblacion = mutar(poblacion);
+      console.log("Mutar", poblacion);
+      dibujarPoblacion(p5instance2, poblacion);
     });
 
     document
       .getElementById("calcularAptitudBtn")
       .addEventListener("click", function () {
-        console.log("Calcular aptitud");
+        for (let figura of poblacion) {
+          calcularAptitud(figura);
+        }
+        console.log("Aptitud calculada", poblacion);
       });
 
     document
       .getElementById("seleccionarBtn")
       .addEventListener("click", function () {
-        console.log("Seleccionar");
+        poblacion = seleccionar(poblacion);
+        console.log("Seleccionados", poblacion);
+        dibujarPoblacion(p5instance2, poblacion);
       });
+
+    let intervalo = null;
+    let generacion = 0;
+
+    document.getElementById("evolucionarBtn").addEventListener("click", function () {
+      if (intervalo) return;
+      poblacion = generarPoblacion(60);
+      generacion = 0;
+
+      intervalo = setInterval(function () {
+        for (let figura of poblacion) calcularAptitud(figura);
+        poblacion = seleccionar(poblacion);
+        poblacion = cruzar(poblacion);
+        poblacion = mutar(poblacion);
+        dibujarPoblacion(p5instance2, poblacion);
+
+        generacion++;
+        if (generacion >= 10000) {
+          clearInterval(intervalo);
+          intervalo = null;
+          console.log("Evolución completa", poblacion);
+        }
+      }, 100);
+    });
+
+    document.getElementById("detenerBtn").addEventListener("click", function () {
+      clearInterval(intervalo);
+      intervalo = null;
+      console.log("Detenido", poblacion);
+    });
 
     // Color picker en la segunda card
     document.getElementById("shapeColor").addEventListener("input", function (e) {
@@ -208,6 +255,8 @@
         const canvas = p.createCanvas(400, 300);
         canvas.parent("sketch-holder-2");
         p.background(255);
+        // Inicializar canvas auxiliar y oculto
+        inicializarCanvasAux(p);
       };
 
       p.draw = function () {

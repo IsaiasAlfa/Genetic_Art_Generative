@@ -50,6 +50,7 @@ function loadImageBitmap(imageElement) {
   bitmapObjetivo = imageData.data;
 
   console.log("Bitmap objetivo cargado:", bitmapObjetivo.length, "valores");
+  console.log("loadImageBitmap llamado");
 }
 
 // Función para crear una figura aleatoria
@@ -119,4 +120,109 @@ function dibujarPoblacion(p, poblacion) {
       p.line(figura.x1, figura.y1, figura.x2, figura.y2);
     }
   }
+}
+
+// Función para calcular la aptitud de una figura comparándola con el bitmap objetivo
+function calcularAptitud(figura) {
+  // 1. Limpiar canvas auxiliar
+  pAux.clear();
+
+  // 2. Dibujar la figura
+  const c = figura.color;
+  pAux.fill(c.r, c.g, c.b, c.a);
+  pAux.noStroke();
+
+  if (figura.tipo === "circle") {
+    pAux.circle(figura.x, figura.y, figura.radio * 2);
+
+  } else if (figura.tipo === "triangle") {
+    pAux.triangle(figura.x1, figura.y1, figura.x2, figura.y2, figura.x3, figura.y3);
+
+  } else if (figura.tipo === "line") {
+    pAux.stroke(c.r, c.g, c.b, c.a);
+    pAux.strokeWeight(figura.grosor);
+    pAux.line(figura.x1, figura.y1, figura.x2, figura.y2);
+  }
+
+  // 3. Leer píxeles
+  pAux.loadPixels();
+  const pixeles = pAux.pixels;
+
+  // 4. Comparar contra bitmap objetivo solo en píxeles que cubre la figura
+  let mse = 0;
+  let count = 0;
+
+  for (let i = 0; i < pixeles.length; i += 4) {
+    const a = pixeles[i + 3];
+    if (a === 0) continue; // píxel no cubierto por la figura
+
+    const dr = pixeles[i]     - bitmapObjetivo[i];
+    const dg = pixeles[i + 1] - bitmapObjetivo[i + 1];
+    const db = pixeles[i + 2] - bitmapObjetivo[i + 2];
+
+    mse += dr * dr + dg * dg + db * db;
+    count++;
+  }
+
+  figura.aptitud = count > 0 ? mse / count : 0;
+}
+
+function seleccionar(poblacion) {
+  poblacion.sort((a, b) => a.aptitud - b.aptitud);
+  return poblacion.slice(0, 15);
+}
+
+function cruzar(poblacion) {
+  const hijos = [];
+  while (hijos.length < 30 - poblacion.length) {
+    const padre1 = poblacion[Math.floor(Math.random() * poblacion.length)];
+    const padre2 = poblacion[Math.floor(Math.random() * poblacion.length)];
+
+    const hijo = crearFiguraAleatoria();
+    hijo.color = {
+      r: Math.floor((padre1.color.r + padre2.color.r) / 2),
+      g: Math.floor((padre1.color.g + padre2.color.g) / 2),
+      b: Math.floor((padre1.color.b + padre2.color.b) / 2),
+      a: Math.floor((padre1.color.a + padre2.color.a) / 2)
+    };
+    hijos.push(hijo);
+  }
+  return [...poblacion, ...hijos];
+}
+
+function mutar(poblacion) {
+  for (let figura of poblacion) {
+    if (Math.random() < 0.13) {
+      // Mutar color
+      figura.color.r = Math.min(255, Math.max(0, figura.color.r + Math.floor(Math.random() * 50) - 25));
+      figura.color.g = Math.min(255, Math.max(0, figura.color.g + Math.floor(Math.random() * 50) - 25));
+      figura.color.b = Math.min(255, Math.max(0, figura.color.b + Math.floor(Math.random() * 50) - 25));
+      figura.color.a = Math.min(255, Math.max(0, figura.color.a + Math.floor(Math.random() * 50) - 25));
+    }
+
+    if (Math.random() < 0.13) {
+      // Mutar geometría según tipo
+      if (figura.tipo === "circle") {
+        figura.x = Math.min(400, Math.max(0, figura.x + Math.floor(Math.random() * 40) - 20));
+        figura.y = Math.min(300, Math.max(0, figura.y + Math.floor(Math.random() * 40) - 20));
+        figura.radio = Math.min(60, Math.max(10, figura.radio + Math.floor(Math.random() * 20) - 10));
+
+      } else if (figura.tipo === "triangle") {
+        figura.x1 = Math.min(400, Math.max(0, figura.x1 + Math.floor(Math.random() * 40) - 20));
+        figura.y1 = Math.min(300, Math.max(0, figura.y1 + Math.floor(Math.random() * 40) - 20));
+        figura.x2 = Math.min(400, Math.max(0, figura.x2 + Math.floor(Math.random() * 40) - 20));
+        figura.y2 = Math.min(300, Math.max(0, figura.y2 + Math.floor(Math.random() * 40) - 20));
+        figura.x3 = Math.min(400, Math.max(0, figura.x3 + Math.floor(Math.random() * 40) - 20));
+        figura.y3 = Math.min(300, Math.max(0, figura.y3 + Math.floor(Math.random() * 40) - 20));
+
+      } else if (figura.tipo === "line") {
+        figura.x1 = Math.min(400, Math.max(0, figura.x1 + Math.floor(Math.random() * 40) - 20));
+        figura.y1 = Math.min(300, Math.max(0, figura.y1 + Math.floor(Math.random() * 40) - 20));
+        figura.x2 = Math.min(400, Math.max(0, figura.x2 + Math.floor(Math.random() * 40) - 20));
+        figura.y2 = Math.min(300, Math.max(0, figura.y2 + Math.floor(Math.random() * 40) - 20));
+        figura.grosor = Math.min(5, Math.max(1, figura.grosor + Math.floor(Math.random() * 3) - 1));
+      }
+    }
+  }
+  return poblacion;
 }
