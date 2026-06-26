@@ -169,7 +169,8 @@
       .getElementById("generarPoblacionBtn")
       .addEventListener("click", function () {
         poblacion = generarPoblacion(30);
-        console.log("Generar Población");
+        dibujarPoblacion(p5instance2, poblacion);
+        console.log("Generar Población", poblacion);
       });
 
     document

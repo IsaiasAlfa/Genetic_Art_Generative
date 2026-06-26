@@ -89,7 +89,6 @@ function generarPoblacion(n) {
 }
 
 function dibujarPoblacion(p, poblacion) {
-  p.background(0);
   for (let figura of poblacion) {
     const c = figura.color;
     p.fill(c.r, c.g, c.b, c.a);
