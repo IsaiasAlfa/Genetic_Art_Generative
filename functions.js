@@ -2,7 +2,25 @@ let figura = {
   tipo: "circle",
   x: 0,
   y: 0,
-  r: 0,
+  radio: 0,
+  color: { r: 0, g: 0, b: 0, a: 0 },
+  aptitud: 0
+};
+
+let figura2 ={
+  tipo: "triangle",
+  x1: 0, y1: 0,
+  x2: 0, y2: 0,
+  x3: 0, y3: 0,
+  color: { r: 0, g: 0, b: 0, a: 0 },
+  aptitud: 0
+};
+
+let figura3 = {
+  tipo : "line",
+  x1: 0, y1: 0,
+  x2: 0, y2: 0,
+  grosor: 1,
   color: { r: 0, g: 0, b: 0, a: 0 },
   aptitud: 0
 };
@@ -26,29 +44,41 @@ function loadImageBitmap(imageElement) {
 };
 
 function crearFiguraAleatoria() {
-  x = Math.floor(Math.random() * 400);
-  y = Math.floor(Math.random() * 300);
-  r = Math.floor(Math.random() * 256);
-  g = Math.floor(Math.random() * 256);
-  b = Math.floor(Math.random() * 256);
-  alpha = Math.floor(Math.random() * 256);
+  const tipos = ["circle", "triangle", "line"];
+  const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+  const color = {
+    r: Math.floor(Math.random() * 256),
+    g: Math.floor(Math.random() * 256),
+    b: Math.floor(Math.random() * 256),
+    a: Math.floor(Math.random() * 156) + 50
+  };
 
+  if (tipo === "circle") {
     return {
-        tipo: "circle",
-        x: Math.floor(Math.random() * 400),
-        y: Math.floor(Math.random() * 300),
-        r: Math.floor(Math.random() * 50) + 10, // radio entre 10 y 60
-        color: {
-        r: Math.floor(Math.random() * 256),
-        g: Math.floor(Math.random() * 256),
-        b: Math.floor(Math.random() * 256),
-        a: Math.floor(Math.random() * 156) + 50 // alpha entre 50 y 205
-        },
-        aptitud: 0
+      tipo,
+      x: Math.floor(Math.random() * 400),
+      y: Math.floor(Math.random() * 300),
+      radio: Math.floor(Math.random() * 50) + 10,
+      color, aptitud: 0
     };
-
-
-};
+  } else if (tipo === "triangle") {
+    return {
+      tipo,
+      x1: Math.floor(Math.random() * 400), y1: Math.floor(Math.random() * 300),
+      x2: Math.floor(Math.random() * 400), y2: Math.floor(Math.random() * 300),
+      x3: Math.floor(Math.random() * 400), y3: Math.floor(Math.random() * 300),
+      color, aptitud: 0
+    };
+  } else {
+    return {
+      tipo,
+      x1: Math.floor(Math.random() * 400), y1: Math.floor(Math.random() * 300),
+      x2: Math.floor(Math.random() * 400), y2: Math.floor(Math.random() * 300),
+      grosor: Math.floor(Math.random() * 4) + 1,
+      color, aptitud: 0
+    };
+  }
+}
 
 function generarPoblacion(n) {
   let poblacion = [];
@@ -58,173 +88,23 @@ function generarPoblacion(n) {
   return poblacion;
 }
 
+function dibujarPoblacion(p, poblacion) {
+  p.background(0);
+  for (let figura of poblacion) {
+    const c = figura.color;
+    p.fill(c.r, c.g, c.b, c.a);
+    p.noStroke();
 
+    if (figura.tipo === "circle") {
+      p.circle(figura.x, figura.y, figura.radio * 2);
 
-  let geomBitmap = null;
-  let maskBitmap = null;
+    } else if (figura.tipo === "triangle") {
+      p.triangle(figura.x1, figura.y1, figura.x2, figura.y2, figura.x3, figura.y3);
 
-  let baseImg;       // image of the original canvas content
-  let maskedCircle;  // image after applying mask()
-
-  function setup() {
-    createCanvas(800, 400);
-    pixelDensity(1); // avoid DPI complications
-
-    // ----------------------------------------------------------------------
-    // 1. DIBUJAR CONTENIDO BASE EN EL CANVAS
-    // ----------------------------------------------------------------------
-    background(30);
-    noStroke();
-    // Simple pattern: vertical stripes with a color gradient
-    for (let x = 0; x < width; x += 10) {
-      let t = x / width;
-      fill(lerpColor(color('#ff5f6d'), color('#ffc371'), t));
-      rect(x, 0, 10, height);
+    } else if (figura.tipo === "line") {
+      p.stroke(c.r, c.g, c.b, c.a);
+      p.strokeWeight(figura.grosor);
+      p.line(figura.x1, figura.y1, figura.x2, figura.y2);
     }
-    // Overlay some ellipses
-    fill(0, 150);
-    ellipse(200, 200, 200, 200);
-    fill(255, 100);
-    ellipse(600, 200, 250, 250);
-
-    // Guardar copia del canvas actual como p5.Image
-    baseImg = get(0, 0, width, height);
-
-    // ----------------------------------------------------------------------
-    // 2. ENFOQUE GEOMÉTRICO: SAMPLE CÍRCULO DIRECTAMENTE DE pixels[]
-    // ----------------------------------------------------------------------
-    loadPixels(); // carga los píxeles del canvas en pixels[]
-    let cxGeom = 200;
-    let cyGeom = 200;
-    let rGeom  = 80;
-    geomBitmap = getCircleBitmapFromCanvas(cxGeom, cyGeom, rGeom);
-
-    // Visualizar el resultado geométrico en la parte izquierda (como debug):
-    // Dibujamos un canvas auxiliar a partir de esa matriz.
-    let geomVis = createImage(2 * rGeom, 2 * rGeom);
-    geomVis.loadPixels();
-    for (let y = 0; y < 2 * rGeom; y++) {
-      for (let x = 0; x < 2 * rGeom; x++) {
-        let idx = 4 * (x + y * geomVis.width);
-        let cell = geomBitmap[y][x];
-        if (cell) {
-          geomVis.pixels[idx + 0] = cell.r;
-          geomVis.pixels[idx + 1] = cell.g;
-          geomVis.pixels[idx + 2] = cell.b;
-          geomVis.pixels[idx + 3] = cell.a;
-        } else {
-          // fuera del círculo => transparente
-          geomVis.pixels[idx + 0] = 0;
-          geomVis.pixels[idx + 1] = 0;
-          geomVis.pixels[idx + 2] = 0;
-          geomVis.pixels[idx + 3] = 0;
-        }
-      }
-    }
-    geomVis.updatePixels();
-
-    // ----------------------------------------------------------------------
-    // 3. ENFOQUE MASK(): USAR UNA MÁSCARA CIRCULAR SOBRE UNA SUB-IMAGEN
-    // ----------------------------------------------------------------------
-    // Región rectangular alrededor de otro círculo
-    let cxMask = 600;
-    let cyMask = 200;
-    let rMask  = 80;
-    let sx = cxMask - rMask;
-    let sy = cyMask - rMask;
-    let sw = 2 * rMask;
-    let sh = 2 * rMask;
-
-    let sub = baseImg.get(sx, sy, sw, sh); // p5.Image de la región rectangular
-
-    // Crear máscara circular con createGraphics
-    let g = createGraphics(sw, sh);
-    g.pixelDensity(1);
-    g.clear();           // totalmente transparente
-    g.noStroke();
-    g.fill(255);         // blanco = visible
-    g.circle(sw / 2, sh / 2, 2 * rMask); // círculo completo
-
-    let maskImg = g.get();  // convertimos a p5.Image
-    maskedCircle = sub.get();
-    maskedCircle.mask(maskImg); // aplica máscara (alpha)
-
-    // Obtener “bitmap lógico” de maskedCircle
-    maskBitmap = getBitmapFromImage(maskedCircle);
-
-    // Mostrar los resultados en consola para ver la estructura de datos
-    console.log('geomBitmap (circle via geometry, null outside):', geomBitmap);
-    console.log('maskBitmap (circle via mask, null where alpha=0):', maskBitmap);
-
-    // Volver a dibujar el canvas limpio y mostrar comparativamente:
-    background(30);
-    // Izquierda: resultado geométrico
-    image(geomVis, 0, 0);
-    // Derecha: resultado mask()
-    image(maskedCircle, width - sw, 0);
   }
-
-  function draw() {
-    // no animation needed
-    noLoop();
-  }
-
-  // ------------------------------------------------------------------------
-  // FUNCIONES AUXILIARES
-  // ------------------------------------------------------------------------
-
-  // Enfoque 1: sampling geométrico directo del canvas (circle)
-  function getCircleBitmapFromCanvas(cx, cy, r) {
-    let bitmap = [];
-    let sx = cx - r;
-    let sy = cy - r;
-    let sw = 2 * r;
-    let sh = 2 * r;
-
-    for (let y = 0; y < sh; y++) {
-      let row = [];
-      for (let x = 0; x < sw; x++) {
-        let px = sx + x;
-        let py = sy + y;
-        // test punto en círculo
-        let dx = px - cx;
-        let dy = py - cy;
-        let inside = dx * dx + dy * dy <= r * r;
-
-        let idx = 4 * (px + py * width);
-        let rc = pixels[idx + 0];
-        let gc = pixels[idx + 1];
-        let bc = pixels[idx + 2];
-        let ac = pixels[idx + 3];
-
-        row.push(inside ? { r: rc, g: gc, b: bc, a: ac } : null);
-      }
-      bitmap.push(row);
-    }
-    return bitmap;
-  }
-
-  // Enfoque 2: obtener matriz bitmap desde una p5.Image con alpha (mask())
-  function getBitmapFromImage(img) {
-    img.loadPixels();
-    let bitmap = [];
-    for (let y = 0; y < img.height; y++) {
-      let row = [];
-      for (let x = 0; x < img.width; x++) {
-        let idx = 4 * (x + y * img.width);
-        let a = img.pixels[idx + 3];
-        if (a > 0) {
-          row.push({
-            r: img.pixels[idx + 0],
-            g: img.pixels[idx + 1],
-            b: img.pixels[idx + 2],
-            a: a
-          });
-        } else {
-          row.push(null);
-        }
-      }
-      bitmap.push(row);
-    }
-    return bitmap;
-  }
+}
