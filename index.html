@@ -191,7 +191,7 @@
       });
 
     document.getElementById("mutarBtn").addEventListener("click", function () {
-      poblacion = mutar(poblacion, tasaMutacion);
+      poblacion = mutar(poblacion);
       console.log("Mutar", poblacion);
       dibujarPoblacion(p5instance2, poblacion);
     });
@@ -215,9 +215,6 @@
 
     let intervalo = null;
     let generacion = 0;
-    let mejorAptitudGlobal = Infinity;
-    let generacionesSinMejora = 0;
-    let tasaMutacion = 0.13;
 
     document.getElementById("evolucionarBtn").addEventListener("click", function () {
       if (intervalo) return;
@@ -229,20 +226,9 @@
         const aptitudGlobal = calcularAptitudGlobal(p5instance2);
         fijarMejores(poblacion, aptitudGlobal);
 
-        if (aptitudGlobal < mejorAptitudGlobal) {
-          mejorAptitudGlobal = aptitudGlobal;
-          generacionesSinMejora = 0;
-          tasaMutacion = 0.13;
-        } else {
-          generacionesSinMejora++;
-          if (generacionesSinMejora >= 50) {
-            tasaMutacion = 0.18;
-          }
-        }
-
         poblacion = seleccionar(poblacion);
         poblacion = cruzar(poblacion);
-        poblacion = mutar(poblacion, tasaMutacion);
+        poblacion = mutar(poblacion);
         dibujarPoblacion(p5instance2, poblacion);
 
         dibujarPoblacion(p5instance2, [...poblacion, ...figurasFijas]);
