@@ -2,11 +2,6 @@
 
 A genetic algorithm that runs entirely in the browser and evolves circles, triangles and lines until, together, they approximate a target image. Built with JavaScript and [p5.js](https://p5js.org/) for the Artificial Intelligence course at the University of Costa Rica (June 2026).
 
-<!-- Replace with a GIF or screenshot of a finished run, e.g. docs/demo.gif -->
-![Demo](docs/demo.gif)
-
-**Live demo:** <!-- add the GitHub Pages link once it is enabled -->
-
 ## How it works
 
 1. **Target:** a random 400×300 photo from [Lorem Picsum](https://picsum.photos/) is loaded into a pixel bitmap.
